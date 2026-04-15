@@ -1,0 +1,36 @@
+- Структура решения:
+  - `auth_service`: FastAPI API для регистрации, логина, проверки профиля по JWT; слои `core`, `db`, `repositories`, `usecases`, `api`, `schemas`, `tests`.
+  - `bot_service`: aiogram-бот + Celery worker + интеграция с OpenRouter; слои `core`, `infra`, `services`, `tasks`, `bot`, `tests`.
+  - Инфраструктура: RabbitMQ как broker Celery, Redis как хранилище токенов и/или backend результатов.
+
+- Необходимые модули:
+  - `auth_service`: `main.py`, `core/config.py`, `core/security.py`, `core/exceptions.py`, `db/base.py`, `db/session.py`, `db/models.py`, `schemas/auth.py`, `schemas/user.py`, `repositories/users.py`, `usecases/auth.py`, `api/deps.py`, `api/routes_auth.py`, `api/router.py`, `pytest.ini`, `.env`, `pyproject.toml`.
+  - `bot_service`: `main.py`, `core/config.py`, `core/jwt.py`, `infra/redis.py`, `infra/celery_app.py`, `services/openrouter_client.py`, `tasks/llm_tasks.py`, `bot/dispatcher.py`, `bot/handlers.py`, `tests/conftest.py`, `pytest.ini`, `.env`, `pyproject.toml`.
+  - Тестовые зависимости: `pytest`, `pytest-asyncio`, `fakeredis`, `pytest-mock`, `respx`, `httpx`.
+
+- Последовательность шагов реализации:
+  - Поднять каркас двух независимых сервисов и базовые конфиги через `pydantic-settings`.
+  - Реализовать Auth Service: модель `User`, репозиторий, usecase `register/login/me`, JWT (`sub/role/iat/exp`), зависимости и роуты `/auth/register`, `/auth/login`, `/auth/me`.
+  - Реализовать Bot Service JWT-валидацию без генерации токенов; хранение JWT по `telegram_user_id` в Redis.
+  - Реализовать асинхронный pipeline: бот публикует задачу в Celery (`RabbitMQ`), воркер вызывает OpenRouter и возвращает результат пользователю (напрямую или через Redis).
+  - Добавить health-check и сборку диспетчера/роутеров без бизнес-логики в точках композиции.
+  - Написать тесты:
+    - Auth unit: хеширование/проверка пароля, create/decode JWT.
+    - Auth integration: `register -> login -> me` + негативные сценарии (409/401).
+    - Bot unit/mock: `/token`, отсутствие токена, вызов `llm_request.delay`.
+    - Bot integration: OpenRouter-клиент через `respx`.
+  - Проверить, что тесты проходят локально без реальных внешних сервисов в unit/mock сценариях.
+  - Подготовить README и артефакты демонстрации (Swagger, Telegram, RabbitMQ, тесты).
+
+- Ожидаемый формат вывода:
+  - Auth API:
+    - `POST /auth/register` -> данные пользователя без `password_hash`.
+    - `POST /auth/login` -> JSON: `{"access_token":"<jwt>","token_type":"bearer"}`.
+    - `GET /auth/me` -> профиль текущего пользователя по Bearer JWT.
+  - Bot UX:
+    - `/token <jwt>` -> подтверждение сохранения токена.
+    - Текст без валидного токена -> отказ + инструкция авторизации.
+    - Текст с валидным токеном -> подтверждение принятия задачи, затем ответ LLM.
+  - Тесты:
+    - Успешный прогон `pytest` в каждом сервисе.
+    - Подтверждённые негативные и интеграционные сценарии.

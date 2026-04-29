@@ -13,3 +13,10 @@ def get_redis() -> aioredis.Redis:
             decode_responses=True,
         )
     return _redis
+
+
+async def close_redis() -> None:
+    global _redis
+    if _redis is not None:
+        await _redis.aclose()
+        _redis = None

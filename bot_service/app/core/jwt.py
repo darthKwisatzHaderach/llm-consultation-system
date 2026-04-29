@@ -17,3 +17,11 @@ def decode_and_validate(token: str) -> dict:
     if "sub" not in payload:
         raise ValueError("invalid token")
     return payload
+
+
+def is_valid_token(token: str) -> bool:
+    try:
+        decode_and_validate(token)
+    except ValueError:
+        return False
+    return True

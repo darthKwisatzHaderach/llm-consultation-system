@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         validation_alias="OPENROUTER_BASE_URL",
     )
     openrouter_model: str = Field(
-        default="stepfun/step-3.5-flash:free",
+        default="openrouter/auto",
         validation_alias="OPENROUTER_MODEL",
     )
     openrouter_site_url: str = Field(

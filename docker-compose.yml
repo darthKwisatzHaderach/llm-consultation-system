@@ -1,0 +1,80 @@
+x-bot-shared: &bot_shared
+  APP_NAME: bot-service
+  ENV: docker
+  JWT_ALG: HS256
+  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+  REDIS_URL: redis://redis:6379/0
+  RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+  OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
+  OPENROUTER_MODEL: openrouter/auto
+  OPENROUTER_SITE_URL: https://example.com
+  OPENROUTER_APP_NAME: bot-service
+  AUTH_SERVICE_URL: http://auth:8000
+
+services:
+  redis:
+    image: redis:7-alpine
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "15672:15672"
+
+  auth:
+    build:
+      context: ./auth_service
+    environment:
+      APP_NAME: auth-service
+      ENV: docker
+      JWT_ALG: HS256
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      SQLITE_PATH: /data/auth.db
+    volumes:
+      - auth_data:/data
+    ports:
+      - "8000:8000"
+
+  bot-api:
+    build:
+      context: ./bot_service
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8001
+    environment:
+      <<: *bot_shared
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+      - rabbitmq
+      - auth
+
+  celery-worker:
+    build:
+      context: ./bot_service
+    command: uv run celery -A app.infra.celery_app:celery_app worker --loglevel=info
+    environment:
+      <<: *bot_shared
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN in .env}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?set OPENROUTER_API_KEY in .env}
+    depends_on:
+      - redis
+      - rabbitmq
+      - auth
+
+  telegram-bot:
+    build:
+      context: ./bot_service
+    command: uv run python -m app.bot.dispatcher
+    environment:
+      <<: *bot_shared
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN in .env}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    depends_on:
+      - redis
+      - rabbitmq
+      - auth
+
+volumes:
+  auth_data:

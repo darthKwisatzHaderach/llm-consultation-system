@@ -6,6 +6,7 @@ celery_app = Celery(
     "bot_service",
     broker=settings.rabbitmq_url,
     backend=settings.redis_url,
+    include=["app.tasks.llm_tasks"],
 )
 
 celery_app.conf.update(
@@ -17,4 +18,8 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
 )
 
-celery_app.autodiscover_tasks(["app.tasks"])
+celery_app.autodiscover_tasks(["app.tasks"], force=True)
+
+# Явный импорт защищает от кейсов, когда autodiscover не срабатывает
+# в контейнере при определенном порядке инициализации модулей.
+import app.tasks.llm_tasks  # noqa: E402,F401

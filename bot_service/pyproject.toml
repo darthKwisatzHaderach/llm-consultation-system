@@ -20,6 +20,3 @@ dependencies = [
   "respx>=0.21.0",
   "fakeredis>=2.23.0",
 ]
-
-[tool.uv]
-dev-dependencies = []

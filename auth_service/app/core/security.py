@@ -30,6 +30,9 @@ def create_access_token(sub: str, role: str) -> str:
 
 
 def decode_token(token: str) -> dict:
+    token = token.strip()
+    if not token:
+        raise ValueError("Invalid token")
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALG])
     except ExpiredSignatureError as exc:

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 import app.db.models
+from app.api.error_handlers import register_error_handlers
 from app.api.router import api_router
 from app.core.config import settings
 from app.db.base import Base
@@ -20,6 +21,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+register_error_handlers(app)
 app.include_router(api_router)
 
 

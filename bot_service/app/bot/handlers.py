@@ -2,6 +2,7 @@ from aiogram import F, Router
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
+from app.bot import texts
 from app.bot.redis_keys import jwt_storage_key
 from app.core.config import settings
 from app.core.jwt import is_valid_token
@@ -18,18 +19,18 @@ def _auth_swagger_url() -> str:
 @router.message(Command("token"))
 async def token_cmd(message: Message, command: CommandObject) -> None:
     if message.from_user is None:
-        await message.answer("Команда доступна в личном чате с ботом.")
+        await message.answer(texts.PRIVATE_ONLY)
         return
     if not command.args or not str(command.args).strip():
-        await message.answer("Использование: /token <jwt>")
+        await message.answer(texts.USAGE_TOKEN)
         return
     token = str(command.args).strip()
     if not is_valid_token(token):
-        await message.answer("Токен недействителен или истёк. Получите новый в Auth Service.")
+        await message.answer(texts.TOKEN_BAD)
         return
     r = get_redis()
     await r.set(jwt_storage_key(message.from_user.id), token)
-    await message.answer("Токен принят и сохранён.")
+    await message.answer(texts.TOKEN_SAVED)
 
 
 @router.message(F.text)
@@ -37,22 +38,21 @@ async def text_message(message: Message) -> None:
     if message.from_user is None:
         return
     text = (message.text or "").strip()
+    if not text:
+        return
     if text.startswith("/"):
-        await message.answer("Неизвестная команда. Для привязки токена: /token <jwt>")
+        await message.answer(texts.UNKNOWN_COMMAND)
         return
 
     r = get_redis()
     key = jwt_storage_key(message.from_user.id)
-    stored = await r.get(key)
+    stored = (await r.get(key) or "").strip()
     if not stored:
-        await message.answer(
-            "Нет сохранённого токена. Зарегистрируйтесь и возьмите JWT в Auth Service, "
-            f"затем отправьте: /token <jwt>\nДокументация: {_auth_swagger_url()}"
-        )
+        await message.answer(texts.no_token_registered(_auth_swagger_url()))
         return
     if not is_valid_token(stored):
-        await message.answer("Сохранённый токен недействителен. Отправьте новый: /token <jwt>")
+        await message.answer(texts.TOKEN_STALE)
         return
 
     llm_request.delay(message.chat.id, text)
-    await message.answer("Запрос принят, ответ придёт в этом чате.")
+    await message.answer(texts.REQUEST_ACCEPTED)

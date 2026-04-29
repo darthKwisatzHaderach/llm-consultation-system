@@ -32,8 +32,11 @@ async def get_current_user_id(
 ) -> int:
     if credentials is None:
         raise InvalidTokenError()
+    raw = str(credentials.credentials).strip()
+    if not raw:
+        raise InvalidTokenError()
     try:
-        payload = decode_token(credentials.credentials)
+        payload = decode_token(raw)
     except ValueError as exc:
         if "expired" in str(exc).lower():
             raise TokenExpiredError() from exc

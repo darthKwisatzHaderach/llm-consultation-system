@@ -4,6 +4,9 @@ from app.core.config import settings
 
 
 def decode_and_validate(token: str) -> dict:
+    token = token.strip()
+    if not token:
+        raise ValueError("invalid token")
     try:
         payload = jwt.decode(
             token,

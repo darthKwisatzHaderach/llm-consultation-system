@@ -4,11 +4,16 @@ from app.repositories.users import UsersRepository
 from app.schemas.user import UserPublic
 
 
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
 class AuthUsecase:
     def __init__(self, users: UsersRepository):
         self.users = users
 
     async def register(self, email: str, password: str) -> UserPublic:
+        email = _normalize_email(email)
         existing = await self.users.get_by_email(email)
         if existing is not None:
             raise UserAlreadyExistsError()
@@ -18,6 +23,7 @@ class AuthUsecase:
         return UserPublic.model_validate(user)
 
     async def login(self, email: str, password: str) -> str:
+        email = _normalize_email(email)
         user = await self.users.get_by_email(email)
         if user is None or not verify_password(password, user.password_hash):
             raise InvalidCredentialsError()

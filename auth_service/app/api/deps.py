@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -45,3 +46,7 @@ async def get_current_user_id(
         return int(sub)
     except (TypeError, ValueError):
         raise InvalidTokenError()
+
+
+AuthUsecaseDep = Annotated[AuthUsecase, Depends(get_auth_uc)]
+CurrentUserId = Annotated[int, Depends(get_current_user_id)]

@@ -1,14 +1,18 @@
 ## Демонстрация
 
-Демонстрация
+![Демонстрация](demo/demo.gif)
 
 - Видео:
   - [demo/demo.mp4](demo/demo.mp4)
 - Скриншоты:
-  - Auth Service: Auth Service
-  - Bot Service: Bot Service
-  - Telegram Bot: Telegram Bot
-  - RabbitMQ: RabbitMQ
+  - Auth Service: 
+      ![Auth Service](demo/auth service.png)
+  - Bot Service: 
+      ![Bot Service](demo/bot service.png)
+  - Telegram Bot: 
+      ![Telegram Bot](demo/tg bot.png)
+  - RabbitMQ: 
+      ![RabbitMQ](demo/RabbitMQ.png)
 
 # LLM consultation (2 сервиса)
 
@@ -48,7 +52,7 @@ cd ../bot_service && uv sync
 
 ## Docker Compose (Redis, RabbitMQ, Auth, Bot API, Celery, polling)
 
-В репозитории есть `docker-compose.yml`: образы приложений собираются из `auth_service/` и `bot_service/`, имена сервисов внутри сети задают уже зафиксированные URL (`**AUTH_SERVICE_URL=http://auth:8000`**, `**REDIS_URL=redis://redis:6379/0**`, `**RABBITMQ_URL=…**` — менять через правку compose не требуется, если используются стандартные сервисы из файла).
+В репозитории есть `docker-compose.yml`: образы приложений собираются из `auth_service/` и `bot_service/`, имена сервисов внутри сети задают уже зафиксированные URL (`**AUTH_SERVICE_URL=http://auth:8000`**, `**REDIS_URL=redis://redis:6379/0`**, `**RABBITMQ_URL=…**` — менять через правку compose не требуется, если используются стандартные сервисы из файла).
 
 1. В корне репозитория создать `.env`, например: `cp compose.env.example .env` и заполнить как минимум **JWT_SECRET**, **TELEGRAM_BOT_TOKEN**, **OPENROUTER_API_KEY** (значения — из таблицы выше). Файл `compose.env.example` задаёт только эти ключи под подстановку в compose; совпадает по смыслу с блоком `environment` в `docker-compose.yml`.
 2. Запуск (сборка при первом заходе):
@@ -90,7 +94,7 @@ uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
    uv run python -m app.bot.dispatcher
   ```
 
-При использовании **Docker Compose** эти три процесса соответствуют сервисам `**bot-api`**, `**celery-worker**`, `**telegram-bot**` (порты 8001 проброшен на хост; лог polling — вывод процесса `telegram-bot`, лог Celery — `celery-worker`).
+При использовании **Docker Compose** эти три процесса соответствуют сервисам `**bot-api`**, `**celery-worker`**, `**telegram-bot**` (порты 8001 проброшен на хост; лог polling — вывод процесса `telegram-bot`, лог Celery — `celery-worker`).
 
 Дальше в Telegram: команда `/token <JWT из Swagger>`, затем обычный текст — ответ приходит после того, как отработают очередь и OpenRouter.
 

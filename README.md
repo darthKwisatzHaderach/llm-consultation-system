@@ -1,3 +1,7 @@
+## Демонстрация
+
+[demo/demo.mp4](demo/demo.mp4)
+
 # LLM consultation (2 сервиса)
 
 **Auth** — регистрация, логин, выдача JWT.  

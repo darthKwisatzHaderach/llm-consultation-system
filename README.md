@@ -6,11 +6,11 @@
   - [demo/demo.mp4](demo/demo.mp4)
 - Скриншоты:
   - Auth Service: 
-      ![Auth Service](demo/auth service.png)
+      ![Auth Service](demo/auth%20service.png)
   - Bot Service: 
-      ![Bot Service](demo/bot service.png)
+      ![Bot Service](demo/bot%20service.png)
   - Telegram Bot: 
-      ![Telegram Bot](demo/tg bot.png)
+      ![Telegram Bot](demo/tg%20bot.png)
   - RabbitMQ: 
       ![RabbitMQ](demo/RabbitMQ.png)
 
